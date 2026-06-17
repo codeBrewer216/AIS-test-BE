@@ -8,7 +8,15 @@ async function bootstrap() {
     .setTitle('AIS Test API')
     .setDescription(' API documentation of Movie Ticket Booking System for AIS Test')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        in: 'header',
+      },
+      'access-token', // key name (สำคัญ)
+    )
     .addTag('APP', 'Example API')
     .addTag('USERS', 'User management API')
     .build();

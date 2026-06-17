@@ -72,8 +72,8 @@ export class UsersService {
     return this.userModel.findByIdAndDelete(id).select('-password').lean().exec();
   }
 
-  async findByEmail(email: string): Promise<UserWithoutPassword | null> {
-    return this.userModel.findOne({ email }).select('-password').lean().exec();
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userModel.findOne({ email }).lean().exec();
   }
 
   async changeRole(id: string, role: string): Promise<UserWithoutPassword | null> {
