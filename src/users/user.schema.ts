@@ -23,7 +23,7 @@ export class User extends Document {
     description: 'The password of the user',
   })
   password!: string
-  @Prop({ type: ['admin', 'user'], required: true })
+  @Prop({ type: String, required: true })
   @ApiProperty({
     example: 'user',
     description: 'The role of the user',

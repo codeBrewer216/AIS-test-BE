@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose'
 import * as bcrypt from 'bcrypt'
 
-type UserWithoutPassword = Omit<User, 'password'>;
+export type UserWithoutPassword = Omit<User, 'password'>;
 
 @Injectable()
 export class UsersService {
@@ -42,6 +42,7 @@ export class UsersService {
         const salt = await bcrypt.genSalt(10)
         user.password = await bcrypt.hash(user.password, salt)
       }
+      user.role = 'user'
       const createdUser = new this.userModel(user);
 
       return createdUser.save();
