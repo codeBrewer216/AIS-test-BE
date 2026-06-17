@@ -6,6 +6,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { MoviesModule } from './movies/movies.module';
+import { BookingModule } from './booking/booking.module';
 import KeyvRedis from '@keyv/redis'
 
 @Module({
@@ -42,6 +44,8 @@ import KeyvRedis from '@keyv/redis'
     }),
     UsersModule,
     AuthModule,
+    MoviesModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

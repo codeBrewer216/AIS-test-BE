@@ -20,7 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 // import { ApiDelete, ApiFileUpload, ApiRead } from '../types/response'
 
 
-@ApiTags('Storage')
+@ApiTags('STORAGES')
 @Controller('storage')
 export class StorageController {
   constructor(private readonly service: StorageService) { }

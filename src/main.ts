@@ -19,6 +19,9 @@ async function bootstrap() {
     )
     .addTag('APP', 'Example API')
     .addTag('USERS', 'User management API')
+    .addTag('MOVIES', 'Movie management API')
+    .addTag('STORAGES', 'Store management API')
+    .addTag('AUTH', 'Authentication API')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
