@@ -15,9 +15,15 @@ export class MoviesService {
   ) { }
 
   async create(dto: Movies): Promise<Movies> {
-    if (!dto.name || !dto.type) {
+    // Accept empty string for `type` but require presence (not null/undefined)
+    if (dto.name == null || dto.type == null) {
       throw new BadRequestException('Missing required fields')
     }
+
+    // Normalize strings
+    if (typeof dto.name === 'string') dto.name = dto.name.trim()
+    if (typeof dto.type === 'string') dto.type = dto.type.trim()
+
     return this.movieModel.create(dto)
   }
 

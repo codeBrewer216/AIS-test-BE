@@ -45,7 +45,13 @@ export class AuthController {
   }
 
   @Post('logout')
-  async logout(@Body('token') token: string) {
-    return await this.authService.logout(token);
+  @UseGuards(JwtRedisGuard)
+  @ApiBearerAuth('access-token')
+  async logout(@Req() req: Request) {
+    const authHeader = req.headers['authorization']
+    const token: string = authHeader?.replace(/^Bearer /, '')
+    if (token) {
+      await this.authService.logout(token)
+    }
   }
 }

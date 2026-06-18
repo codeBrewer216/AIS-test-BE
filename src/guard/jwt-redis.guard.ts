@@ -25,13 +25,18 @@ export class JwtRedisGuard implements CanActivate {
       throw new UnauthorizedException('No token provided')
     }
     if (!token) throw new UnauthorizedException('No token provided')
-    const payload = await this.authService.validateToken(token) // will throw if invalid
+    const payload = await this.authService.validateToken(token)
+    if (!payload) {
+      throw new UnauthorizedException('Invalid token')
+    }
+
     // IP Binding เฉพาะ role admin
-    if (payload.roles && Array.isArray(payload.roles) && payload.roles.includes('admin')) {
+    const isAdmin = (Array.isArray(payload.roles) && payload?.role === 'admin')
+    if (isAdmin) {
       let currentIp = req.ip || req.connection?.remoteAddress || ''
-      currentIp = currentIp.replace('::1', '127.0.0.1').replace('::ffff:', '')
-      if (payload.ip.replace('::1', '127.0.0.1').replace('::ffff:', '') !== currentIp) {
-        // authLogger.warning(`Session IP mismatch`, { userId: payload.sub, expectedIp: payload.ip, currentIp: currentIp.replace('::1', '127.0.0.1').replace('::ffff:', '') });
+      currentIp = String(currentIp).replace('::1', '127.0.0.1').replace('::ffff:', '')
+      const payloadIp = String(payload.ip ?? '').replace('::1', '127.0.0.1').replace('::ffff:', '')
+      if (payloadIp !== currentIp) {
         throw new UnauthorizedException('Session context mismatch')
       }
     }

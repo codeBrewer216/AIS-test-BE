@@ -2,8 +2,6 @@ import { UsersService, } from '@/users/users.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt'
 import type { RedisClientType } from 'redis';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import type { Cache } from 'cache-manager';
 import * as bcrypt from 'bcrypt'
 
 @Injectable()
@@ -11,8 +9,6 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     @Inject('REDIS_CLIENT') private readonly redis: RedisClientType
   ) { }
 
@@ -57,7 +53,6 @@ export class AuthService {
   async validateToken(token: string): Promise<any> {
     const userData = await this.redis.get(`token:${token}`);
     if (userData) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return JSON.parse(userData);
     }
     return null;

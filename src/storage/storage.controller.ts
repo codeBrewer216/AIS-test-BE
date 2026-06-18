@@ -6,10 +6,11 @@ import {
   Post,
   Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common'
 import { memoryStorage as _memoryStorage } from 'multer'
-import { ApiTags, ApiBody, ApiConsumes, ApiOperation, } from '@nestjs/swagger'
+import { ApiTags, ApiBody, ApiConsumes, ApiOperation, ApiBearerAuth, } from '@nestjs/swagger'
 import { StorageService } from './storage.service'
 import { StreamableFile } from '@nestjs/common'
 // import { PermissionsGuard, } from '../permissions/permissions.guard'
@@ -17,6 +18,7 @@ import { StreamableFile } from '@nestjs/common'
 // import { CrudRateLimitGuard } from '../auth/guard/crud-rate-limit.guard'
 import express from 'express';
 import { FileInterceptor } from '@nestjs/platform-express'
+import { JwtRedisGuard } from '@/guard/jwt-redis.guard'
 // import { ApiDelete, ApiFileUpload, ApiRead } from '../types/response'
 
 
@@ -26,6 +28,8 @@ export class StorageController {
   constructor(private readonly service: StorageService) { }
 
   @Post('upload')
+  @UseGuards(JwtRedisGuard)
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Upload a file' })
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
@@ -56,15 +60,12 @@ export class StorageController {
 
 
   @Get('file/:filename')
-  // @ApiRead(Storage, {}, { permission: `${PermissionGroup}:read`, guards: [JwtRedisGuard, PermissionsGuard, CrudRateLimitGuard] })
   async getFile(@Param('filename') filename: string) {
     const stream = await this.service.getFileStream(filename)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     return new StreamableFile(stream)
   }
 
   @Delete(':filename')
-  // @ApiDelete(Storage, {}, { permission: `${PermissionGroup}:delete`, guards: [JwtRedisGuard, PermissionsGuard, CrudRateLimitGuard] })
   async delete(@Param('filename') filename: string) {
     return this.service.delete(filename)
   }
