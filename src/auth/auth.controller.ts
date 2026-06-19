@@ -9,6 +9,7 @@ export interface JwtRequest extends Request {
     sub: string
     role: string[]
     imageUrl: string | null
+    _id: string
   }
 }
 

@@ -7,7 +7,7 @@ export type SeatStatus = 'available' | 'held' | 'booked'
 
 @Schema({ timestamps: true })
 export class Seat {
-  @Prop({ type: Types.ObjectId, required: true, index: true })
+  @Prop({ type: Types.ObjectId, required: true, })
   screeningId!: Types.ObjectId
 
   @Prop({ type: String, required: true })
@@ -30,6 +30,9 @@ export class Seat {
 
   @Prop({ type: String, required: false })
   bookingId?: string
+
+  @Prop({ type: Types.ObjectId, required: false })
+  bookingUser?: Types.ObjectId
 }
 
 export const SeatSchema = SchemaFactory.createForClass(Seat)

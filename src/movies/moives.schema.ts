@@ -53,6 +53,13 @@ export class Movies extends Document {
   })
   endDate!: Date
 
+  @Prop({ type: [String], required: true })
+  @ApiProperty({
+    example: ['Room-1', 'Room-2', 'Room-3'],
+    description: 'List of rooms/theaters for this movie (must be 3)',
+  })
+  rooms!: string[]
+
 }
 
 export const MoviesSchema = SchemaFactory.createForClass(Movies)

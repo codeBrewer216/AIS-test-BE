@@ -1,4 +1,142 @@
-import { Injectable } from '@nestjs/common';
+
+import { Injectable, BadRequestException, } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Booking } from './booking.schema';
+import { Seat } from '@/movies/seat.schema';
+import { Screening } from '@/movies/screening.schema';
+
 
 @Injectable()
-export class BookingService {}
+export class BookingService {
+  constructor(
+    @InjectModel(Booking.name) private bookingModel: Model<any>,
+    @InjectModel(Seat.name) private seatModel: Model<any>,
+    @InjectModel(Screening.name) private screeningModel: Model<any>,
+  ) { }
+
+  private async ensureScreeningSeats(screeningId: Types.ObjectId) {
+    const existing = await this.seatModel.countDocuments({ screeningId }).exec()
+    if (existing > 0) return
+    const rows = ['A', 'B', 'C', 'D', 'E']
+    const seats: Partial<Seat>[] = []
+    for (const row of rows) {
+      for (let i = 1; i <= 10; i++) {
+        seats.push({ screeningId, seatId: `${row}${i}`, row, number: i, status: 'available' })
+      }
+    }
+    try {
+      await this.seatModel.insertMany(seats)
+    } catch (_err) {
+      // ignore duplicates or race inserts
+    }
+  }
+
+  async createBooking(dto: any) {
+    const {
+      rooms,
+      movieId,
+      seatIds,
+      userId,
+    }: {
+      rooms: string;
+      movieId: string;
+      seatIds: string[];
+      userId?: string;
+    } = dto;
+    if (!rooms || !movieId || !Array.isArray(seatIds) || seatIds.length === 0) {
+      throw new BadRequestException('Missing required fields')
+    }
+
+    if (!Types.ObjectId.isValid(movieId)) throw new BadRequestException('Invalid movieId')
+    const movieObjId = new Types.ObjectId(movieId)
+    let screeningObjId: Types.ObjectId
+    if (Types.ObjectId.isValid(rooms)) {
+      screeningObjId = new Types.ObjectId(rooms)
+    } else {
+      // normalize and validate canonical room names
+      const roomMap: Record<string, string> = {
+        'room-1': 'Room-1',
+        'room-2': 'Room-2',
+        'room-3': 'Room-3',
+      }
+      const roomName = roomMap[rooms.toLowerCase()]
+      if (!roomName) throw new BadRequestException('Invalid room; valid rooms are Room-1, Room-2, Room-3')
+
+      // try to find upcoming screening by room + movie
+      const now = new Date()
+      let screening = await this.screeningModel.findOne({ room: roomName, movieId: movieObjId, startsAt: { $gte: now } }).sort({ startsAt: 1 }).lean().exec()
+      if (!screening) {
+        screening = await this.screeningModel.findOne({ room: roomName, movieId: movieObjId }).sort({ startsAt: 1 }).lean().exec()
+      }
+
+      // if none found, create a screening for this movie/room starting now
+      if (!screening) {
+        const created = await this.screeningModel.create({ movieId: movieObjId, startsAt: now, room: roomName, capacity: 50 })
+        screeningObjId = created._id
+      } else {
+        screeningObjId = screening._id
+      }
+    }
+
+    // ensure seats exist for this screening (rooms -> screening id)
+    await this.ensureScreeningSeats(screeningObjId)
+
+    // Attempt optimistic, transaction-free claim: atomically mark seats as booked
+    const bookingId = new Types.ObjectId()
+    let updateRes: any
+    try {
+      const setObj: any = { status: 'booked', bookingId }
+      if (userId && Types.ObjectId.isValid(userId)) setObj.bookingUser = new Types.ObjectId(userId)
+      updateRes = await this.seatModel.updateMany({ screeningId: screeningObjId, seatId: { $in: seatIds }, status: 'available' }, { $set: setObj }).exec()
+    } catch (_err) {
+      throw new BadRequestException('Failed to claim seats')
+    }
+
+    const claimed = (updateRes.modifiedCount ?? (updateRes).nModified ?? 0)
+    if (claimed !== seatIds.length) {
+      // rollback any partial claims
+      try {
+        await this.seatModel.updateMany({ screeningId: screeningObjId, bookingId }, { $set: { status: 'available' }, $unset: { bookingId: '', bookingUser: '' } }).exec()
+      } catch (_e) {
+        // ignore rollback errors
+      }
+
+      // determine which seats are missing or unavailable to return better error
+      const foundSeats: any[] = await this.seatModel.find({ screeningId: screeningObjId, seatId: { $in: seatIds } }).lean().exec()
+      const foundIds = new Set(foundSeats.map(s => s.seatId))
+      const missing = seatIds.filter(id => !foundIds.has(id))
+      const unavailable = foundSeats.filter(s => s.status !== 'available').map(s => ({ seatId: s.seatId, status: s.status }))
+
+      let msg = 'One or more seats are already held/booked'
+      const parts: string[] = []
+      if (missing.length) parts.push(`missing seats: ${missing.join(', ')}`)
+      if (unavailable.length) parts.push(`unavailable: ${unavailable.map(u => `${u.seatId}(${u.status})`).join(', ')}`)
+      if (parts.length) msg = `${msg} (${parts.join('; ')})`
+
+      throw new BadRequestException(msg)
+    }
+
+    // fetch claimed seats
+    const seats = await this.seatModel.find({ screeningId: screeningObjId, bookingId }).exec()
+
+    // create booking document referencing claimed seats
+    let booking
+    try {
+      booking = await this.bookingModel.create({ _id: bookingId, rooms: screeningObjId, movieId: new Types.ObjectId(movieId), seats: seats.map(s => ({ seatId: s.seatId, seatRef: s._id })), userId: userId ? new Types.ObjectId(userId) : undefined, status: 'confirmed' })
+    } catch (err) {
+      // rollback seats if booking creation fails
+      await this.seatModel.updateMany({ screeningId: screeningObjId, bookingId }, { $set: { status: 'available' }, $unset: { bookingId: '', bookingUser: '' } }).exec()
+      throw err
+    }
+
+    return booking
+  }
+
+  async getBookingsByUser(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) throw new BadRequestException('Invalid user id')
+    const uid = new Types.ObjectId(userId)
+    const bookings = await this.bookingModel.find({ userId: uid }).sort({ createdAt: -1 }).populate('userId', 'username email').lean().exec()
+    return bookings
+  }
+}
