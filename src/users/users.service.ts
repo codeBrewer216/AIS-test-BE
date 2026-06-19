@@ -65,7 +65,7 @@ export class UsersService {
   }
 
   async update(id: string, user: User): Promise<UserWithoutPassword | null> {
-    return this.userModel.findByIdAndUpdate(id, user, { new: true }).select('-password').lean().exec();
+    return this.userModel.findByIdAndUpdate(id, user, { returnDocument: 'after' }).select('-password').lean().exec();
   }
 
   async delete(id: string): Promise<UserWithoutPassword | null> {
@@ -86,20 +86,20 @@ export class UsersService {
     } else if (user.role === role) {
       throw new Error('User already has this role');
     }
-    return this.userModel.findByIdAndUpdate(id, { role }, { new: true }).select('-password').lean().exec();
+    return this.userModel.findByIdAndUpdate(id, { role }, { returnDocument: 'after' }).select('-password').lean().exec();
   }
   async addImageProfile(id: string, imageUrl: string): Promise<UserWithoutPassword | null> {
     const user = await this.userModel.findById(id).select('-password').lean().exec();
     if (!user) {
       throw new Error('User not found');
     }
-    return this.userModel.findByIdAndUpdate(id, { imageProfile: imageUrl }, { new: true }).select('-password').lean().exec();
+    return this.userModel.findByIdAndUpdate(id, { imageProfile: imageUrl }, { returnDocument: 'after' }).select('-password').lean().exec();
   }
   async removeImageProfile(id: string): Promise<UserWithoutPassword | null> {
     const user = await this.userModel.findById(id).select('-password').lean().exec();
     if (!user) {
       throw new Error('User not found');
     }
-    return this.userModel.findByIdAndUpdate(id, { imageProfile: null }, { new: true }).select('-password').lean().exec();
+    return this.userModel.findByIdAndUpdate(id, { imageProfile: null }, { returnDocument: 'after' }).select('-password').lean().exec();
   }
 }

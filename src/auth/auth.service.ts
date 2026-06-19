@@ -41,7 +41,7 @@ export class AuthService {
       `token:${token}`,
       JSON.stringify(user),
       {
-        EX: 3600,
+        EX: 60 * 60 * 24,
       },
     );
     return {

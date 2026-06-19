@@ -43,7 +43,7 @@ export class MoviesService {
 
   async update(id: string, dto: Movies): Promise<Movies> {
     if (!Types.ObjectId.isValid(id)) throw new BadRequestException('Invalid id')
-    const updated = await this.movieModel.findByIdAndUpdate(id, dto, { new: true }).lean().exec()
+    const updated = await this.movieModel.findByIdAndUpdate(id, dto, { returnDocument: 'after' }).lean().exec()
     if (!updated) throw new NotFoundException('Movie not found')
     return updated
   }

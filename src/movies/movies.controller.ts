@@ -38,6 +38,7 @@ export class MoviesController {
 
   @Put(':id')
   @UseGuards(JwtRedisGuard)
+  @Roles('admin')
   @ApiBearerAuth('access-token')
   @ApiParam({ name: 'id', description: 'Movie ID' })
   async update(@Param('id') id: string, @Body() body: Movies) {
