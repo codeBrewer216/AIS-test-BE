@@ -46,6 +46,7 @@ export class MoviesController {
 
   @Delete(':id')
   @UseGuards(JwtRedisGuard)
+  @Roles('admin')
   @ApiBearerAuth('access-token')
   @ApiParam({ name: 'id', description: 'Movie ID' })
   async remove(@Param('id') id: string) {
