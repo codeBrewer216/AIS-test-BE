@@ -9,4 +9,10 @@ export class CreateHoldDto {
 
   @ApiProperty({ description: 'Array of seat IDs to hold (e.g. A1, A2)', type: [String], example: ['A1', 'A2'] })
   seatIds!: string[]
+
+  @ApiProperty({ description: 'Optional preferred start time (ISO) to pick a specific screening', required: false })
+  startsAt?: string
+
+  @ApiProperty({ description: 'Optional time slot hour to select a screening (10,14,18)', required: false, example: 10 })
+  timeSlot?: number
 }

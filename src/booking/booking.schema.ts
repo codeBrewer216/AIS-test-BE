@@ -7,8 +7,14 @@ export type BookingStatus = 'held' | 'confirmed' | 'cancelled'
 
 @Schema({ timestamps: true })
 export class Booking {
-  @Prop({ type: String, required: true, })
-  rooms!: string
+  @Prop({ type: Types.ObjectId, required: true, ref: 'Screening' })
+  screeningId!: Types.ObjectId
+
+  @Prop({ type: String, required: true })
+  room!: string
+
+  @Prop({ type: Date, required: true })
+  startsAt!: Date
 
   @Prop({ type: Types.ObjectId, required: true, })
   movieId!: Types.ObjectId
@@ -40,6 +46,6 @@ export class Booking {
 
 export const BookingSchema = SchemaFactory.createForClass(Booking)
 
-BookingSchema.index({ rooms: 1 })
+BookingSchema.index({ screeningId: 1 })
 BookingSchema.index({ holdId: 1 })
 

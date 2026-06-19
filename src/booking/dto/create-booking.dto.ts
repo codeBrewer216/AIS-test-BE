@@ -10,12 +10,8 @@ export class CreateBookingDto {
   @ApiProperty({ description: 'Array of seat IDs to book (e.g. A1, A2)', type: [String], example: ['A1', 'A2'] })
   seatIds!: string[]
 
-  @ApiProperty({ description: 'User ID making the booking (optional)', required: false })
-  userId?: string
 
-  @ApiProperty({ description: 'Optional customer name', required: false })
-  customerName?: string
+  @ApiProperty({ description: 'Optional preferred start time (ISO) to pick a specific screening', required: false })
+  startsAt?: string
 
-  @ApiProperty({ description: 'Optional customer email', required: false })
-  customerEmail?: string
 }

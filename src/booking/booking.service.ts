@@ -15,6 +15,26 @@ export class BookingService {
     @InjectModel(Screening.name) private screeningModel: Model<any>,
   ) { }
 
+  private async ensureDailyShowtimes(movieId: Types.ObjectId, roomName: string) {
+    const times = [10, 14, 18]
+    const today = new Date()
+    for (const hour of times) {
+      const startsAt = new Date(today)
+      startsAt.setHours(hour, 0, 0, 0)
+      // if startsAt already passed for today, keep it (we may create for past too)
+      const exists = await this.screeningModel.findOne({ movieId, room: roomName, startsAt }).lean().exec()
+      if (!exists) {
+        try {
+          const created = await this.screeningModel.create({ movieId, room: roomName, startsAt, capacity: 50 })
+          // seed seats for the created screening
+          await this.ensureScreeningSeats(created._id)
+        } catch (_e) {
+          // ignore concurrent creates
+        }
+      }
+    }
+  }
+
   private async ensureScreeningSeats(screeningId: Types.ObjectId) {
     const existing = await this.seatModel.countDocuments({ screeningId }).exec()
     if (existing > 0) return
@@ -63,24 +83,55 @@ export class BookingService {
       const roomName = roomMap[rooms.toLowerCase()]
       if (!roomName) throw new BadRequestException('Invalid room; valid rooms are Room-1, Room-2, Room-3')
 
-      // try to find upcoming screening by room + movie
-      const now = new Date()
-      let screening = await this.screeningModel.findOne({ room: roomName, movieId: movieObjId, startsAt: { $gte: now } }).sort({ startsAt: 1 }).lean().exec()
-      if (!screening) {
-        screening = await this.screeningModel.findOne({ room: roomName, movieId: movieObjId }).sort({ startsAt: 1 }).lean().exec()
+      // allow choosing a specific time slot or startsAt from DTO
+      let targetStartsAt: Date | undefined
+      const timeSlot = (dto && dto.timeSlot) || undefined
+      const startsAtRaw = (dto && dto.startsAt) || undefined
+      if (startsAtRaw) {
+        // accept formats like "10.00", "10:00" or ISO
+        const hmMatch = String(startsAtRaw).match(/^(\d{1,2})(?:\.|:)(\d{2})$/)
+        if (hmMatch) {
+          const h = parseInt(hmMatch[1], 10)
+          const m = parseInt(hmMatch[2], 10)
+          targetStartsAt = new Date()
+          targetStartsAt.setHours(h, m, 0, 0)
+        } else {
+          const parsed = new Date(startsAtRaw)
+          if (!isNaN(parsed.getTime())) targetStartsAt = parsed
+        }
+      } else if (timeSlot && [10, 14, 18].includes(Number(timeSlot))) {
+        targetStartsAt = new Date()
+        targetStartsAt.setHours(Number(timeSlot), 0, 0, 0)
       }
 
-      // if none found, create a screening for this movie/room starting now
-      if (!screening) {
-        const created = await this.screeningModel.create({ movieId: movieObjId, startsAt: now, room: roomName, capacity: 50 })
-        screeningObjId = created._id
-      } else {
-        screeningObjId = screening._id
+      // ensure standard daily showtimes exist
+      await this.ensureDailyShowtimes(movieObjId, roomName)
+      const now = new Date()
+      let screening: any = null
+      if (targetStartsAt) {
+        // find or create screening at the exact targetStartsAt
+        screening = await this.screeningModel.findOne({ room: roomName, movieId: movieObjId, startsAt: targetStartsAt }).lean().exec()
+        if (!screening) {
+          const created = await this.screeningModel.create({ movieId: movieObjId, room: roomName, startsAt: targetStartsAt, capacity: 50 })
+          await this.ensureScreeningSeats(created._id)
+          screening = created
+        }
       }
+      if (!screening) {
+        screening = await this.screeningModel.findOne({ room: roomName, movieId: movieObjId, startsAt: { $gte: now } }).sort({ startsAt: 1 }).lean().exec()
+        if (!screening) {
+          screening = await this.screeningModel.findOne({ room: roomName, movieId: movieObjId }).sort({ startsAt: 1 }).lean().exec()
+        }
+      }
+      screeningObjId = screening._id
     }
 
     // ensure seats exist for this screening (rooms -> screening id)
     await this.ensureScreeningSeats(screeningObjId)
+
+    // load screening doc to record showtime in booking
+    const screeningDoc = await this.screeningModel.findById(screeningObjId).lean().exec()
+    if (!screeningDoc) throw new BadRequestException('Screening not found')
 
     // Attempt optimistic, transaction-free claim: atomically mark seats as booked
     const bookingId = new Types.ObjectId()
@@ -123,7 +174,16 @@ export class BookingService {
     // create booking document referencing claimed seats
     let booking
     try {
-      booking = await this.bookingModel.create({ _id: bookingId, rooms: screeningObjId, movieId: new Types.ObjectId(movieId), seats: seats.map(s => ({ seatId: s.seatId, seatRef: s._id })), userId: userId ? new Types.ObjectId(userId) : undefined, status: 'confirmed' })
+      booking = await this.bookingModel.create({
+        _id: bookingId,
+        screeningId: screeningObjId,
+        room: screeningDoc.room,
+        startsAt: screeningDoc.startsAt,
+        movieId: new Types.ObjectId(movieId),
+        seats: seats.map(s => ({ seatId: s.seatId, seatRef: s._id })),
+        userId: userId ? new Types.ObjectId(userId) : undefined,
+        status: 'confirmed',
+      })
     } catch (err) {
       // rollback seats if booking creation fails
       await this.seatModel.updateMany({ screeningId: screeningObjId, bookingId }, { $set: { status: 'available' }, $unset: { bookingId: '', bookingUser: '' } }).exec()

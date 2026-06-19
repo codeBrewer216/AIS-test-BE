@@ -3,7 +3,7 @@ import { BookingService } from './booking.service';
 import { JwtRedisGuard } from '@/guard/jwt-redis.guard';
 import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import type { JwtRequest } from '@/auth/auth.controller';
-import { CreateHoldDto } from './dto/create-hold.dto';
+import { CreateBookingDto } from './dto/create-booking.dto';
 
 @Controller('bookings')
 export class BookingController {
@@ -12,8 +12,8 @@ export class BookingController {
   @Post()
   @UseGuards(JwtRedisGuard)
   @ApiBearerAuth('access-token')
-  @ApiBody({ type: CreateHoldDto })
-  async create(@Body() dto: CreateHoldDto, @Req() req: JwtRequest) {
+  @ApiBody({ type: CreateBookingDto })
+  async create(@Body() dto: CreateBookingDto, @Req() req: JwtRequest) {
     const userID = req.user._id
     // attach authenticated user id to booking payload
     const payload = Object.assign({}, dto, { userId: userID })
