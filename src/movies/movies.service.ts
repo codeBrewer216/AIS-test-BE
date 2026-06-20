@@ -2,11 +2,15 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Movies } from './moives.schema';
+import { Screening } from './screening.schema';
+import { Seat } from './seat.schema';
 
 @Injectable()
 export class MoviesService {
   constructor(
     @InjectModel(Movies.name) private movieModel: Model<Movies>,
+    @InjectModel(Screening.name) private screeningModel: Model<Screening>,
+    @InjectModel(Seat.name) private seatModel: Model<Seat>,
   ) { }
 
   async create(dto: Movies): Promise<Movies> {
@@ -60,10 +64,29 @@ export class MoviesService {
     return { ok: true }
   }
 
-  async getShowtimes(movieId: string): Promise<{ movie: Movies; showtimes: Date; length: number }> {
+  async getShowtimes(movieId: string): Promise<{ movie: Movies; showtimes: Array<any>; length: number }> {
     if (!Types.ObjectId.isValid(movieId)) throw new BadRequestException('Invalid id')
     const movie = await this.movieModel.findById(movieId).lean().exec()
     if (!movie) throw new NotFoundException('Movie not found')
-    return { movie, showtimes: movie.startDate, length: movie.length }
+
+    // find all screenings for this movie
+    const screenings = await this.screeningModel.find({ movieId: new Types.ObjectId(movieId) }).sort({ startsAt: 1 }).lean().exec()
+
+    // for each screening, attach seat availability
+    const showtimes = await Promise.all(screenings.map(async (s) => {
+      const seats = await this.seatModel.find({ screeningId: s._id }).lean().exec()
+      const seatSummary = seats.map(seat => ({ seatId: seat.seatId, status: seat.status }))
+      const availableCount = seats.filter(seat => seat.status === 'available').length
+      return {
+        screeningId: s._id,
+        room: s.room,
+        startsAt: s.startsAt,
+        capacity: s.capacity,
+        availableCount,
+        seats: seatSummary,
+      }
+    }))
+
+    return { movie, showtimes, length: movie.length }
   }
 }

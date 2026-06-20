@@ -5,12 +5,14 @@ import { MoviesService } from './movies.service';
 import { Movies, MoviesSchema } from './moives.schema';
 import { Seat, SeatSchema } from './seat.schema'
 import { AuthModule } from '@/auth/auth.module';
+import { Screening, ScreeningSchema } from './screening.schema';
 
 @Module({
   imports: [
     forwardRef(() => AuthModule),
     MongooseModule.forFeature([
       { name: Movies.name, schema: MoviesSchema },
+      { name: Screening.name, schema: ScreeningSchema },
       { name: Seat.name, schema: SeatSchema },
     ]),
   ],

@@ -18,13 +18,11 @@ export class MinioService implements OnModuleInit {
 
     if (!exists) {
       await this.minio.makeBucket(this.bucket, 'us-east-1')
-      console.log(`Bucket ${this.bucket} created`)
     }
     return true
   }
 
   async upload(file: Express.Multer.File) {
-    console.log('file:', file)
     const filename = `${randomUUID()}` + file.mimetype.replace('image/', '.')
 
     await this.minio.putObject(

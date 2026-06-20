@@ -13,6 +13,4 @@ export class CreateHoldDto {
   @ApiProperty({ description: 'Optional preferred start time (ISO) to pick a specific screening', required: false })
   startsAt?: string
 
-  @ApiProperty({ description: 'Optional time slot hour to select a screening (10,14,18)', required: false, example: 10 })
-  timeSlot?: number
 }

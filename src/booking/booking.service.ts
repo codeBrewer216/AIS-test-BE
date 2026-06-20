@@ -6,13 +6,20 @@ import { Booking } from './booking.schema';
 import { Seat } from '@/movies/seat.schema';
 import { Screening } from '@/movies/screening.schema';
 
+export class CreateBookingDto {
+  rooms: string;
+  movieId: string;
+  seatIds: string[];
+  startsAt?: string;
+}
 
 @Injectable()
 export class BookingService {
   constructor(
-    @InjectModel(Booking.name) private bookingModel: Model<any>,
+
+    @InjectModel(Booking.name) private bookingModel: Model<Booking>,
     @InjectModel(Seat.name) private seatModel: Model<any>,
-    @InjectModel(Screening.name) private screeningModel: Model<any>,
+    @InjectModel(Screening.name) private screeningModel: Model<Screening>,
   ) { }
 
   private async ensureDailyShowtimes(movieId: Types.ObjectId, roomName: string) {
@@ -26,7 +33,6 @@ export class BookingService {
       if (!exists) {
         try {
           const created = await this.screeningModel.create({ movieId, room: roomName, startsAt, capacity: 50 })
-          // seed seats for the created screening
           await this.ensureScreeningSeats(created._id)
         } catch (_e) {
           // ignore concurrent creates
@@ -52,7 +58,7 @@ export class BookingService {
     }
   }
 
-  async createBooking(dto: any) {
+  async createBooking(dto: CreateBookingDto & { userId?: string }): Promise<Booking> {
     const {
       rooms,
       movieId,
@@ -85,7 +91,6 @@ export class BookingService {
 
       // allow choosing a specific time slot or startsAt from DTO
       let targetStartsAt: Date | undefined
-      const timeSlot = (dto && dto.timeSlot) || undefined
       const startsAtRaw = (dto && dto.startsAt) || undefined
       if (startsAtRaw) {
         // accept formats like "10.00", "10:00" or ISO
@@ -99,9 +104,6 @@ export class BookingService {
           const parsed = new Date(startsAtRaw)
           if (!isNaN(parsed.getTime())) targetStartsAt = parsed
         }
-      } else if (timeSlot && [10, 14, 18].includes(Number(timeSlot))) {
-        targetStartsAt = new Date()
-        targetStartsAt.setHours(Number(timeSlot), 0, 0, 0)
       }
 
       // ensure standard daily showtimes exist
@@ -154,7 +156,13 @@ export class BookingService {
       }
 
       // determine which seats are missing or unavailable to return better error
-      const foundSeats: any[] = await this.seatModel.find({ screeningId: screeningObjId, seatId: { $in: seatIds } }).lean().exec()
+      const foundSeats = await this.seatModel
+        .find({
+          screeningId: screeningObjId,
+          seatId: { $in: seatIds },
+        })
+        .lean<Seat[]>()
+        .exec();
       const foundIds = new Set(foundSeats.map(s => s.seatId))
       const missing = seatIds.filter(id => !foundIds.has(id))
       const unavailable = foundSeats.filter(s => s.status !== 'available').map(s => ({ seatId: s.seatId, status: s.status }))
@@ -172,25 +180,36 @@ export class BookingService {
     const seats = await this.seatModel.find({ screeningId: screeningObjId, bookingId }).exec()
 
     // create booking document referencing claimed seats
-    let booking
     try {
-      booking = await this.bookingModel.create({
+      const booking = await this.bookingModel.create({
         _id: bookingId,
         screeningId: screeningObjId,
         room: screeningDoc.room,
         startsAt: screeningDoc.startsAt,
         movieId: new Types.ObjectId(movieId),
-        seats: seats.map(s => ({ seatId: s.seatId, seatRef: s._id })),
-        userId: userId ? new Types.ObjectId(userId) : undefined,
+        seats: seats.map((s) => ({
+          seatId: s.seatId,
+          seatRef: s._id,
+        })),
+        userId: userId
+          ? new Types.ObjectId(userId)
+          : undefined,
         status: 'confirmed',
-      })
+      });
+      return booking;
     } catch (err) {
-      // rollback seats if booking creation fails
-      await this.seatModel.updateMany({ screeningId: screeningObjId, bookingId }, { $set: { status: 'available' }, $unset: { bookingId: '', bookingUser: '' } }).exec()
-      throw err
+      await this.seatModel.updateMany(
+        { screeningId: screeningObjId, bookingId },
+        {
+          $set: { status: 'available' },
+          $unset: {
+            bookingId: '',
+            bookingUser: '',
+          },
+        },
+      ).exec();
+      throw err;
     }
-
-    return booking
   }
 
   async getBookingsByUser(userId: string) {
