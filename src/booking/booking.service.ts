@@ -236,7 +236,7 @@ export class BookingService {
   async getBookingById(bookingId: string) {
     if (!Types.ObjectId.isValid(bookingId)) throw new BadRequestException('Invalid booking id')
     const bid = new Types.ObjectId(bookingId)
-    const booking = await this.bookingModel.findById(bid).populate('movieId', 'name poster').lean().exec()
+    const booking = await this.bookingModel.findById(bid).populate('movieId', 'name poster').populate('userId', 'username email').lean().exec()
     if (!booking) throw new BadRequestException('Booking not found')
     return booking
   }
