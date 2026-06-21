@@ -8,6 +8,7 @@ import { Screening, ScreeningSchema } from '@/movies/screening.schema';
 import { MoviesModule } from '@/movies/movies.module';
 import { AuthModule } from '@/auth/auth.module';
 import { Movies, MoviesSchema } from '@/movies/moives.schema';
+import { PdfService } from './pdf.service';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { Movies, MoviesSchema } from '@/movies/moives.schema';
     ]),
   ],
   controllers: [BookingController],
-  providers: [BookingService],
-  exports: [BookingService],
+  providers: [BookingService, PdfService],
+  exports: [BookingService,],
 })
 export class BookingModule { }

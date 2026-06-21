@@ -5,7 +5,7 @@ import { Model, Types } from 'mongoose';
 import { Booking } from './booking.schema';
 import { Seat } from '@/movies/seat.schema';
 import { Screening } from '@/movies/screening.schema';
-import { Movies } from '@/movies/moives.schema';
+import { PdfService } from './pdf.service';
 
 export class CreateBookingDto {
   rooms: string;
@@ -21,7 +21,7 @@ export class BookingService {
     @InjectModel(Booking.name) private bookingModel: Model<Booking>,
     @InjectModel(Seat.name) private seatModel: Model<any>,
     @InjectModel(Screening.name) private screeningModel: Model<Screening>,
-    @InjectModel('Movies') private movieModel: Model<Movies>,
+    private readonly pdfService: PdfService,
   ) { }
 
   private async ensureDailyShowtimes(movieId: Types.ObjectId, roomName: string) {
@@ -88,7 +88,6 @@ export class BookingService {
         'room-2': 'Room-2',
         'room-3': 'Room-3',
       }
-      console.log('rooms:', rooms)
       const roomName = roomMap[rooms.toLowerCase()]
       if (!roomName) throw new BadRequestException('Invalid room; valid rooms are Room-1, Room-2, Room-3')
 
@@ -229,11 +228,26 @@ export class BookingService {
       .exec()
 
     return bookings.map((booking) => ({
-
       ...booking,
-
       movieName: (booking.movieId as any)?.name
-
     }))
+  }
+
+  async getBookingById(bookingId: string) {
+    if (!Types.ObjectId.isValid(bookingId)) throw new BadRequestException('Invalid booking id')
+    const bid = new Types.ObjectId(bookingId)
+    const booking = await this.bookingModel.findById(bid).populate('movieId', 'name poster').lean().exec()
+    if (!booking) throw new BadRequestException('Booking not found')
+    return booking
+  }
+
+  async exportBookingPdf(bookingId: string) {
+    if (!Types.ObjectId.isValid(bookingId)) throw new BadRequestException('Invalid booking id')
+    const bid = new Types.ObjectId(bookingId)
+    const booking = await this.bookingModel.findById(bid).populate('movieId', 'name poster').lean().exec()
+    if (!booking) throw new BadRequestException('Booking not found')
+    // generate PDF with booking details (for simplicity, using the same PDF for all bookings here)
+    const pdfBytes = await this.pdfService.generatePdf(booking)
+    return pdfBytes
   }
 }

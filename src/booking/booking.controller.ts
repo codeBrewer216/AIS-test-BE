@@ -1,10 +1,11 @@
-import { Controller, Post, Body, Get, UseGuards, Req, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Req, BadRequestException, Param, Res } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { JwtRedisGuard } from '@/guard/jwt-redis.guard';
-import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
 import type { JwtRequest } from '@/auth/auth.controller';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { Booking } from './booking.schema';
+import type { Response } from 'express';
 
 @Controller('bookings')
 export class BookingController {
@@ -32,5 +33,30 @@ export class BookingController {
     if (!tokenUser) throw new BadRequestException('Invalid user id')
     // return
     return this.bookingService.getBookingsByUser(tokenUser)
+  }
+
+  @Get(':id/export-pdf')
+  @UseGuards(JwtRedisGuard)
+  @ApiBearerAuth('access-token')
+  @ApiParam({ name: 'id', description: 'Booking ID' })
+  async exportBookingPdf(
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.bookingService.exportBookingPdf(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="booking-${id}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+    res.end(pdfBuffer);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtRedisGuard)
+  @ApiBearerAuth('access-token')
+  @ApiParam({ name: 'id', description: 'Booking ID' })
+  async getBookingById(@Param('id') id: string) {
+    return this.bookingService.getBookingById(id)
   }
 }
