@@ -18,8 +18,6 @@ export class MoviesService {
     if (typeof dto.name === 'string') dto.name = dto.name.trim()
     if (typeof dto.type === 'string') dto.type = dto.type.trim()
 
-      // enforce canonical rooms
-      ; (dto as any).rooms = ['Room-1', 'Room-2', 'Room-3']
 
     const created = await this.movieModel.create(dto)
 

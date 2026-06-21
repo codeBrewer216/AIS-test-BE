@@ -5,6 +5,7 @@ import { Model, Types } from 'mongoose';
 import { Booking } from './booking.schema';
 import { Seat } from '@/movies/seat.schema';
 import { Screening } from '@/movies/screening.schema';
+import { Movies } from '@/movies/moives.schema';
 
 export class CreateBookingDto {
   rooms: string;
@@ -20,6 +21,7 @@ export class BookingService {
     @InjectModel(Booking.name) private bookingModel: Model<Booking>,
     @InjectModel(Seat.name) private seatModel: Model<any>,
     @InjectModel(Screening.name) private screeningModel: Model<Screening>,
+    @InjectModel('Movies') private movieModel: Model<Movies>,
   ) { }
 
   private async ensureDailyShowtimes(movieId: Types.ObjectId, roomName: string) {
@@ -86,6 +88,7 @@ export class BookingService {
         'room-2': 'Room-2',
         'room-3': 'Room-3',
       }
+      console.log('rooms:', rooms)
       const roomName = roomMap[rooms.toLowerCase()]
       if (!roomName) throw new BadRequestException('Invalid room; valid rooms are Room-1, Room-2, Room-3')
 
@@ -215,7 +218,22 @@ export class BookingService {
   async getBookingsByUser(userId: string) {
     if (!Types.ObjectId.isValid(userId)) throw new BadRequestException('Invalid user id')
     const uid = new Types.ObjectId(userId)
-    const bookings = await this.bookingModel.find({ userId: uid }).sort({ createdAt: -1 }).populate('userId', 'username email').lean().exec()
-    return bookings
+    // const bookings = await this.bookinƒgModel.find({ userId: uid }).sort({ createdAt: -1 }).populate('userId', 'username email').lean().exec()
+
+    const bookings = await this.bookingModel
+      .find({ userId: uid })
+      .sort({ createdAt: -1 })
+      .populate('userId', 'username email')
+      .populate('movieId', 'name')
+      .lean()
+      .exec()
+
+    return bookings.map((booking) => ({
+
+      ...booking,
+
+      movieName: (booking.movieId as any)?.name
+
+    }))
   }
 }

@@ -16,7 +16,11 @@ export class Booking {
   @Prop({ type: Date, required: true })
   startsAt!: Date
 
-  @Prop({ type: Types.ObjectId, required: true, })
+  @Prop({
+    type: Types.ObjectId,
+    required: true,
+    ref: 'Movies',
+  })
   movieId!: Types.ObjectId
 
   @Prop({
