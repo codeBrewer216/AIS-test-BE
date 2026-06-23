@@ -1,71 +1,29 @@
-# services:
-#   backend:
-#     container_name: ais_backend
-#     restart: always
-#     build:
-#       context: .
-#       dockerfile: Dockerfile
-#     ports:
-#       - '8000:8000'
-#     environment:
-#       NODE_ENV: production
-
-#   redis:
-#     image: redis:7
-#     container_name: ais_redis
-#     restart: always
-#     ports:
-#       - '6379:6379'
-#     volumes:
-#       - ./data/redis_data:/data
-#   mongo:
-#     image: mongo:7
-#     container_name: ais_mongo
-#     restart: always
-#     ports:
-#       - '27017:27017'
-#     volumes:
-#       - ./data/mongo_data:/data/db
-
-#   minio:
-#     image: minio/minio:latest
-#     container_name: ais_minio
-#     restart: always
-#     ports:
-#       - '9000:9000' # S3 API
-#       - '9001:9001' # Console UI
-#     environment:
-#       MINIO_ROOT_USER: admin
-#       MINIO_ROOT_PASSWORD: password123
-#     volumes:
-#       - ./data/minio_data:/data
-#     command: server /data --console-address ":9001"
-#     healthcheck:
-#       test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
-#       interval: 30s
-#       timeout: 10s
-#       retries: 3
-# volumes:
-#   mongo_data:
-#   redis_data:
-#   minio_data:
-
 services:
   backend:
     container_name: ais_backend
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile
-    restart: always
     ports:
       - '8000:8000'
+    environment:
+      NODE_ENV: production
+    depends_on:
+      - redis
+      - mongo
+      - minio
     env_file:
       - .env
-    depends_on:
-      - mongo
-      - redis
-      - minio
 
+  redis:
+    image: redis:7
+    container_name: ais_redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./data/redis_data:/data
   mongo:
     image: mongo:7
     container_name: ais_mongo
@@ -73,31 +31,26 @@ services:
     ports:
       - '27017:27017'
     volumes:
-      - mongo_data:/data/db
-
-  redis:
-    image: redis:7-alpine
-    container_name: ais_redis
-    restart: always
-    ports:
-      - '6379:6379'
-    volumes:
-      - redis_data:/data
+      - ./data/mongo_data:/data/db
 
   minio:
     image: minio/minio:latest
     container_name: ais_minio
     restart: always
-    command: server /data --console-address ":9001"
+    ports:
+      - '9000:9000' # S3 API
+      - '9001:9001' # Console UI
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password123
-    ports:
-      - '9000:9000'
-      - '9001:9001'
     volumes:
-      - minio_data:/data
-
+      - ./data/minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 30s
+      timeout: 10s
+      retries: 3
 volumes:
   mongo_data:
   redis_data:

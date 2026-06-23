@@ -52,7 +52,7 @@ export class AuthService {
 
   async validateToken(token: string): Promise<any> {
     const userData = await this.redis.get(`token:${token}`);
-    if (userData) {
+    if (typeof userData === 'string') {
       return JSON.parse(userData);
     }
     return null;

@@ -1,48 +1,25 @@
-# # Base image
-# FROM node:24-alpine
-
-# # Create app directory
-# WORKDIR /usr/src/app
-
-# # A wildcard is used to ensure both package.json AND package-lock.json are copied
-# COPY package*.json ./
-
-# # Install app dependencies
-# RUN npm install
-
-# # Bundle app source
-# COPY . .
-
-# # Creates a "dist" folder with the production build
-# RUN npm run build
-
-# EXPOSE 8000
-# # Start the server using the production build
-# CMD [ "node", "dist/main.js" ]
-FROM node:24-alpine AS builder
-
+FROM node:20-bullseye-slim AS builder
 WORKDIR /app
 
+# Install dependencies
 COPY package*.json ./
-
 RUN npm ci
 
+# Copy source and build
 COPY . .
-
 RUN npm run build
 
-FROM node:24-alpine
-
+FROM node:20-bullseye-slim
 WORKDIR /app
-
 ENV NODE_ENV=production
 
+# Install production dependencies
 COPY package*.json ./
-
 RUN npm ci --omit=dev
 
-COPY dist ./dist
+# Copy built app and node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 8000
-
-CMD ["node", "dist/main.js"]
+CMD ["node", "-r", "module-alias/register", "dist/main.js"]
