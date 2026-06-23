@@ -49,6 +49,7 @@ export default embedImage
 @Injectable()
 export class PdfService {
   async generatePdf(booking: {
+
     _id: Types.ObjectId | string;
     __v: number;
     seats: { seatId: string }[];

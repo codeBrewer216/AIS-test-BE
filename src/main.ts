@@ -31,6 +31,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+
   SwaggerModule.setup('docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
@@ -41,6 +42,7 @@ async function bootstrap() {
       defaultModelsExpandDepth: -1,
     },
   });
+
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();

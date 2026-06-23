@@ -1,4 +1,15 @@
 services:
+  backend:
+    container_name: ais_backend
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8000:8000'
+    environment:
+      NODE_ENV: production
+
   redis:
     image: redis:7
     container_name: ais_redis
