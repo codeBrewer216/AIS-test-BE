@@ -1,10 +1,10 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { UsersModule } from '@/users/users.module';
+import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { RedisClientProvider } from './RedisProvider';
-import { JwtRedisGuard } from '@/guard/jwt-redis.guard';
+import { JwtRedisGuard } from '../guard/jwt-redis.guard';
 
 @Module({
   imports: [forwardRef(() => UsersModule),

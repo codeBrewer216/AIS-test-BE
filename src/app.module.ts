@@ -34,13 +34,18 @@ import KeyvRedis from '@keyv/redis'
     }),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: () => ({
-        stores: [
-          new KeyvRedis(
-            `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || 6379}`,
-          ),
-        ],
-      }),
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        console.log('REDIS_HOST=', config.get('REDIS_HOST'));
+        console.log('REDIS_PORT=', config.get('REDIS_PORT'));
+        return {
+          stores: [
+            new KeyvRedis(
+              `redis://${config.get('REDIS_HOST')}:${config.get('REDIS_PORT')}`,
+            ),
+          ],
+        };
+      },
     }),
     UsersModule,
     AuthModule,

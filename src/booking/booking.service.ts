@@ -3,8 +3,8 @@ import { Injectable, BadRequestException, } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Booking } from './booking.schema';
-import { Seat } from '@/movies/seat.schema';
-import { Screening } from '@/movies/screening.schema';
+import { Seat } from '../movies/seat.schema';
+import { Screening } from '../movies/screening.schema';
 import { PdfService } from './pdf.service';
 
 interface PopulatedMovie {

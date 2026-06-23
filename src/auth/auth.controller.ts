@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JwtRedisGuard } from '@/guard/jwt-redis.guard';
+import { JwtRedisGuard } from '../guard/jwt-redis.guard';
 
 export interface JwtRequest extends Request {
   user: {

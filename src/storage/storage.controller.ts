@@ -13,13 +13,9 @@ import { memoryStorage as _memoryStorage } from 'multer'
 import { ApiTags, ApiBody, ApiConsumes, ApiOperation, ApiBearerAuth, } from '@nestjs/swagger'
 import { StorageService } from './storage.service'
 import { StreamableFile } from '@nestjs/common'
-// import { PermissionsGuard, } from '../permissions/permissions.guard'
-// import { JwtRedisGuard } from '../auth/guard/jwt-redis.guard'
-// import { CrudRateLimitGuard } from '../auth/guard/crud-rate-limit.guard'
 import express from 'express';
 import { FileInterceptor } from '@nestjs/platform-express'
-import { JwtRedisGuard } from '@/guard/jwt-redis.guard'
-// import { ApiDelete, ApiFileUpload, ApiRead } from '../types/response'
+import { JwtRedisGuard } from '../guard/jwt-redis.guard'
 
 
 @ApiTags('STORAGES')

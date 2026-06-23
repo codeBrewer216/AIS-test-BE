@@ -2,9 +2,9 @@ import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nes
 import { MoviesService } from './movies.service';
 import { ApiBearerAuth, ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Movies } from './moives.schema';
-import { JwtRedisGuard } from '@/guard/jwt-redis.guard';
-import { Roles } from '@/guard/roles.decorator';
-import { RolesGuard } from '@/guard/roles.guard';
+import { JwtRedisGuard } from '../guard/jwt-redis.guard';
+import { Roles } from '../guard/roles.decorator';
+import { RolesGuard } from '../guard/roles.guard';
 
 @ApiTags('MOVIES')
 @Controller('movies')

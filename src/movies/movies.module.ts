@@ -4,7 +4,7 @@ import { MoviesController } from './movies.controller';
 import { MoviesService } from './movies.service';
 import { Movies, MoviesSchema } from './moives.schema';
 import { Seat, SeatSchema } from './seat.schema'
-import { AuthModule } from '@/auth/auth.module';
+import { AuthModule } from '../auth/auth.module';
 import { Screening, ScreeningSchema } from './screening.schema';
 
 @Module({

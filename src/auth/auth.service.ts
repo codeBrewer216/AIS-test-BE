@@ -1,4 +1,4 @@
-import { UsersService, } from '@/users/users.service';
+import { UsersService, } from '../users/users.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt'
 import type { RedisClientType } from 'redis';

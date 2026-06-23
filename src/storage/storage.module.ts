@@ -8,7 +8,7 @@ import { StorageController } from './storage.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { StorageSchema, Storage } from './storage.schema';
 import { MinioModule } from '../minio/minio.module';
-import { AuthModule } from '@/auth/auth.module';
+import { AuthModule } from '../auth/auth.module';
 
 
 @Module({

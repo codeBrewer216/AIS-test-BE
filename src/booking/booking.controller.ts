@@ -1,8 +1,8 @@
 import { Controller, Post, Body, Get, UseGuards, Req, BadRequestException, Param, Res } from '@nestjs/common';
 import { BookingService } from './booking.service';
-import { JwtRedisGuard } from '@/guard/jwt-redis.guard';
+import { JwtRedisGuard } from '../guard/jwt-redis.guard';
 import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
-import type { JwtRequest } from '@/auth/auth.controller';
+import type { JwtRequest } from '../auth/auth.controller';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { Booking } from './booking.schema';
 import type { Response } from 'express';
