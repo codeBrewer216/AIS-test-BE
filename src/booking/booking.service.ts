@@ -7,6 +7,11 @@ import { Seat } from '@/movies/seat.schema';
 import { Screening } from '@/movies/screening.schema';
 import { PdfService } from './pdf.service';
 
+interface PopulatedMovie {
+  name: string;
+  poster?: string;
+}
+
 export class CreateBookingDto {
   rooms: string;
   movieId: string;
@@ -244,10 +249,18 @@ export class BookingService {
   async exportBookingPdf(bookingId: string) {
     if (!Types.ObjectId.isValid(bookingId)) throw new BadRequestException('Invalid booking id')
     const bid = new Types.ObjectId(bookingId)
-    const booking = await this.bookingModel.findById(bid).populate('movieId', 'name poster').lean().exec()
-    if (!booking) throw new BadRequestException('Booking not found')
     // generate PDF with booking details (for simplicity, using the same PDF for all bookings here)
-    const pdfBytes = await this.pdfService.generatePdf(booking)
+    const booking = await this.bookingModel
+      .findById(bid)
+      .populate<{ movieId: PopulatedMovie }>(
+        'movieId',
+        'name poster'
+      )
+      .lean()
+      .exec();
+    if (!booking) throw new BadRequestException('Booking not found')
+
+    const pdfBytes = await this.pdfService.generatePdf(booking);
     return pdfBytes
   }
 }

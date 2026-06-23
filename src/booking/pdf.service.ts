@@ -1,40 +1,65 @@
 import { Injectable } from '@nestjs/common';
 import { PDFDocument, PDFImage, StandardFonts, rgb } from 'pdf-lib';
 import sharp from 'sharp';
+import * as QRCode from 'qrcode';
+import { Types } from 'mongoose';
 
 const embedImage = async (
   pdfDoc: PDFDocument,
   imageUrl: string
 ): Promise<PDFImage> => {
   const response = await fetch(imageUrl);
-  const imageBytes = Buffer.from(await response.arrayBuffer());
-  const extension = imageUrl.split('.').pop()?.toLowerCase();
+  if (!response.ok) {
+    throw new Error(`Failed to fetch image: ${response.status}`);
+  }
 
-  switch (extension) {
-    case 'png':
+  const imageBytes = Buffer.from(await response.arrayBuffer());
+  const contentType = response.headers.get('content-type')?.toLowerCase();
+
+  switch (contentType) {
+    case 'image/png':
       return await pdfDoc.embedPng(imageBytes);
-    case 'jpg':
-    case 'jpeg':
+    case 'image/jpeg':
+    case 'image/jpg':
       return await pdfDoc.embedJpg(imageBytes);
-    case 'webp': {
+    case 'image/webp': {
       const jpgBuffer = await sharp(imageBytes)
         .jpeg({ quality: 90 })
         .toBuffer();
       return await pdfDoc.embedJpg(jpgBuffer);
     }
     default:
-      throw new Error(`Unsupported image format: ${extension}`);
+      try {
+        return await pdfDoc.embedJpg(imageBytes);
+      } catch {
+        try {
+          return await pdfDoc.embedPng(imageBytes);
+        } catch {
+          const jpgBuffer = await sharp(imageBytes)
+            .jpeg({ quality: 90 })
+            .toBuffer();
+          return await pdfDoc.embedJpg(jpgBuffer);
+        }
+      }
   }
-
 };
 
 export default embedImage
 
 @Injectable()
 export class PdfService {
-  async generatePdf(booking: any): Promise<Uint8Array> {
+  async generatePdf(booking: {
+    _id: Types.ObjectId | string;
+    __v: number;
+    seats: { seatId: string }[];
+    movieId: {
+      poster?: string;
+      name?: string;
+    };
+    room: string;
+    startsAt?: Date;
+  }): Promise<Uint8Array> {
     const pdfDoc = await PDFDocument.create();
-    console.log(booking)
     for (const seat of booking.seats) {
 
       const page = pdfDoc.addPage([500, 220]); // A4
@@ -71,7 +96,6 @@ export class PdfService {
         borderWidth: 1,
         borderColor: rgb(0.5, 0.5, 0.5),
       });
-
 
       if (booking.movieId?.poster) {
         const posterImage = await embedImage(pdfDoc, booking.movieId.poster)
@@ -183,13 +207,22 @@ export class PdfService {
         borderColor: rgb(0.5, 0.5, 0.5),
       });
 
-      page.drawText('QR', {
-        x: 425,
-        y: 75,
-        size: 16,
-        font: boldFont,
+      const qrCode = await this.generateQrCode(
+        `${process.env.FRONTEND_URL}/ticket/${booking._id.toString()}`
+      );
+      const qrImage = await embedImage(pdfDoc, qrCode);
+      page.drawImage(qrImage, {
+        x: 401,
+        y: 41,
+        width: 68,
+        height: 68,
       });
     }
     return await pdfDoc.save();
   }
+
+  async generateQrCode(text: string): Promise<string> {
+    return (await QRCode.toDataURL(text)) as string;
+  }
+
 }
