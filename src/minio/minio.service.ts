@@ -4,14 +4,14 @@ import { randomUUID } from 'crypto'
 @Injectable()
 export class MinioService implements OnModuleInit {
   private minio = new Client({
-    endPoint: process.env.MINIO_ENDPOINT!,
+    endPoint: process.env.MINIO_ENDPOINT,
     port: Number(process.env.MINIO_PORT),
     useSSL: false,
-    accessKey: process.env.MINIO_ACCESS_KEY!,
-    secretKey: process.env.MINIO_SECRET_KEY!,
+    accessKey: process.env.MINIO_ACCESS_KEY,
+    secretKey: process.env.MINIO_SECRET_KEY,
   })
 
-  private bucket = process.env.MINIO_BUCKET!
+  private bucket = process.env.MINIO_BUCKET
 
   async onModuleInit() {
     const exists = await this.minio.bucketExists(this.bucket)
