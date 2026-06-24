@@ -446,6 +446,32 @@ Deployment can be started using:
 docker compose up -d
 ```
 
+First Init
+
+```bash
+curl -X 'POST' \
+  'http://localhost:8000/users' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "username": "admin",
+  "email": "admin@example.com",
+  "password": "P@ssw0rd"
+}'
+```
+
+```bash
+id from create user respone
+
+curl -X 'POST' \
+  'http://localhost:8000/users/:id/role' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "role": "admin"
+}'
+```
+
 ---
 
 ## Logging
