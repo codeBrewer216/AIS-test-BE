@@ -561,62 +561,112 @@ Winston provides centralized logging and structured log management for troublesh
 
 ## Snapshot
 
-### Homepage (Not Login Yet)
+### Homepage (Before Login)
 
-<img src="public/image/homepage-withoutloging.png" width="720" />
+<figure>
+  <img src="public/image/homepage-withoutloging.png" width="720" alt="Homepage - Not logged in" />
+  <figcaption>Homepage before login</figcaption>
+</figure>
 
-### Homepage (Already Login )
+### Homepage (Logged In)
 
-<img src="public/image/homepage.png" width="720" />
+<figure>
+  <img src="public/image/homepage.png" width="720" alt="Homepage - Logged in" />
+  <figcaption>Homepage after login</figcaption>
+</figure>
 
 ### Admin
 
-<img src="public/image/admin.png" width="720" />
+<figure>
+  <img src="public/image/admin.png" width="720" alt="Admin dashboard" />
+  <figcaption>Admin dashboard</figcaption>
+</figure>
 
 #### Add Movie
 
-<img src="public/image/admin-add.png" width="720" />
+<figure>
+  <img src="public/image/admin-add.png" width="720" alt="Add movie form" />
+  <figcaption>Add movie form</figcaption>
+</figure>
 
 #### Edit Movie
 
-<img src="public/image/admin-edit1.png" width="720" />
-<img src="public/image/admin-edit2.png" width="720" />
+<figure>
+  <img src="public/image/admin-edit1.png" width="720" alt="Edit movie - step 1" />
+  <figcaption>Edit movie form (step 1)</figcaption>
+</figure>
+
+<figure>
+  <img src="public/image/admin-edit2.png" width="720" alt="Edit movie - step 2" />
+  <figcaption>Edit movie form (step 2)</figcaption>
+</figure>
 
 #### Delete Movie
 
-<img src="public/image/admin-delete-dialog.png" width="720" />
+<figure>
+  <img src="public/image/admin-delete-dialog.png" width="720" alt="Delete movie confirmation" />
+  <figcaption>Delete movie confirmation dialog</figcaption>
+</figure>
 
 ### Booking
 
-<img src="public/image/booking.png" width="720" />
+<figure>
+  <img src="public/image/booking.png" width="720" alt="Booking overview" />
+  <figcaption>Booking page</figcaption>
+</figure>
 
 #### Select Movie
 
-<img src="public/image/booking.png" width="720" />
+<figure>
+  <img src="public/image/booking.png" width="720" alt="Select movie" />
+  <figcaption>Browse movies</figcaption>
+</figure>
 
 #### Select Showtime
 
-<img src="public/image/booking-selectshowtime.png" width="720" />
+<figure>
+  <img src="public/image/booking-selectshowtime.png" width="720" alt="Select showtime" />
+  <figcaption>Select showtime slot</figcaption>
+</figure>
 
 #### Select Seats
 
-<img src="public/image/booking-selectseats.png" width="720" />
+Users can select available seats in real time before confirming the booking.
+
+<figure>
+  <img src="public/image/booking-selectseats.png" width="720" alt="Select seats in real time" />
+  <figcaption>Select seats</figcaption>
+</figure>
 
 #### Confirm Reservation
 
-<img src="public/image/booking-confirm.png" width="720" />
+Users can review and confirm their reservation before submitting the booking.
+
+<figure>
+  <img src="public/image/booking-confirm.png" width="720" alt="Confirm reservation" />
+  <figcaption>Confirm reservation</figcaption>
+</figure>
 
 #### Already Booked
 
-<img src="public/image/booking-alreadybooked.png" width="720" />
+<figure>
+  <img src="public/image/booking-alreadybooked.png" width="720" alt="Already booked seats" />
+  <figcaption>Already booked seats</figcaption>
+</figure>
 
 ### Ticket
 
-<img src="public/image/ticket.png" width="720" />
+<figure>
+  <img src="public/image/ticket.png" width="720" alt="User ticket list" />
+  <figcaption>Ticket list</figcaption>
+</figure>
 
-#### Detail
+#### Ticket Detail
 
-<img src="public/image/ticket-detail.png" width="720" />
+<figure>
+  <img src="public/image/ticket-detail.png" width="720" alt="Ticket detail" />
+  <figcaption>Ticket detail</figcaption>
+</figure>
 
 #### Ticket
 
@@ -625,6 +675,12 @@ Winston provides centralized logging and structured log management for troublesh
 ## Demo
 
 [📄 Demo Video](hhttps://youtu.be/uVwU33R7AiI)
+
+## Related Frontend
+
+Frontend repository for this project:
+
+- [Movie Ticket Booking Backend (Angular)](https://github.com/codeBrewer216/AIS-test-FE)
 
 ## License
 
