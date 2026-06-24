@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt'
 import type { RedisClientType } from 'redis';
 import * as bcrypt from 'bcrypt'
+import { authLogger } from '@/logger/winston-mongodb.logger';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +29,7 @@ export class AuthService {
   async login(email: string, password: string) {
     const user = await this.validateUser(email, password);
     if (!user) {
+      authLogger.error(`Invalid credentials for email: ${email}`);
       throw new Error('Invalid credentials');
     }
     const payload = {
@@ -55,6 +57,7 @@ export class AuthService {
     if (typeof userData === 'string') {
       return JSON.parse(userData);
     }
+    authLogger.error(`Invalid token: ${token}`);
     return null;
   }
 
@@ -63,6 +66,7 @@ export class AuthService {
       const payload = await this.jwtService.verify(token);
       return payload;
     } catch (_error) {
+      authLogger.error(`Failed to verify token: ${token}`);
       return null;
     }
   }

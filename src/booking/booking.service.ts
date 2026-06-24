@@ -6,6 +6,7 @@ import { Booking } from './booking.schema';
 import { Seat } from '../movies/seat.schema';
 import { Screening } from '../movies/screening.schema';
 import { PdfService } from './pdf.service';
+import { auditLogger } from '@/logger/winston-mongodb.logger';
 
 interface PopulatedMovie {
   name: string;
@@ -61,6 +62,7 @@ export class BookingService {
     try {
       await this.seatModel.insertMany(seats)
     } catch (_err) {
+      auditLogger.error(`Failed to insert seats for screening ${screeningId.toString()}: ${_err.message}`)
       // ignore duplicates or race inserts
     }
   }
@@ -78,6 +80,7 @@ export class BookingService {
       userId?: string;
     } = dto;
     if (!rooms || !movieId || !Array.isArray(seatIds) || seatIds.length === 0) {
+      auditLogger.error(`Missing required fields in booking DTO: ${JSON.stringify(dto)}`)
       throw new BadRequestException('Missing required fields')
     }
 
@@ -203,8 +206,10 @@ export class BookingService {
           : undefined,
         status: 'confirmed',
       });
+      auditLogger.info(`Created booking document for bookingId ${bookingId.toString()} with ${seats.length} seats`)
       return booking;
     } catch (err) {
+      auditLogger.error(`Failed to create booking document for bookingId ${bookingId.toString()}: ${err.message}`)
       await this.seatModel.updateMany(
         { screeningId: screeningObjId, bookingId },
         {
@@ -220,7 +225,10 @@ export class BookingService {
   }
 
   async getBookingsByUser(userId: string) {
-    if (!Types.ObjectId.isValid(userId)) throw new BadRequestException('Invalid user id')
+    if (!Types.ObjectId.isValid(userId)) {
+      auditLogger.error(`Invalid user id: ${userId}`);
+      throw new BadRequestException('Invalid user id');
+    }
     const uid = new Types.ObjectId(userId)
     // const bookings = await this.bookinƒgModel.find({ userId: uid }).sort({ createdAt: -1 }).populate('userId', 'username email').lean().exec()
 
@@ -239,15 +247,24 @@ export class BookingService {
   }
 
   async getBookingById(bookingId: string) {
-    if (!Types.ObjectId.isValid(bookingId)) throw new BadRequestException('Invalid booking id')
+    if (!Types.ObjectId.isValid(bookingId)) {
+      auditLogger.error(`Invalid booking id: ${bookingId}`);
+      throw new BadRequestException('Invalid booking id');
+    }
     const bid = new Types.ObjectId(bookingId)
     const booking = await this.bookingModel.findById(bid).populate('movieId', 'name poster').populate('userId', 'username email').lean().exec()
-    if (!booking) throw new BadRequestException('Booking not found')
+    if (!booking) {
+      auditLogger.error(`Booking not found for id: ${bookingId}`);
+      throw new BadRequestException('Booking not found');
+    }
     return booking
   }
 
   async exportBookingPdf(bookingId: string) {
-    if (!Types.ObjectId.isValid(bookingId)) throw new BadRequestException('Invalid booking id')
+    if (!Types.ObjectId.isValid(bookingId)) {
+      auditLogger.error(`Invalid booking id for PDF export: ${bookingId}`);
+      throw new BadRequestException('Invalid booking id')
+    }
     const bid = new Types.ObjectId(bookingId)
     // generate PDF with booking details (for simplicity, using the same PDF for all bookings here)
     const booking = await this.bookingModel
@@ -258,7 +275,10 @@ export class BookingService {
       )
       .lean()
       .exec();
-    if (!booking) throw new BadRequestException('Booking not found')
+    if (!booking) {
+      auditLogger.error(`Booking not found for id: ${bookingId}`);
+      throw new BadRequestException('Booking not found');
+    }
 
     const pdfBytes = await this.pdfService.generatePdf(booking);
     return pdfBytes

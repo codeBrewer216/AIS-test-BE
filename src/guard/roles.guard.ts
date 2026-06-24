@@ -1,6 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { ROLES_KEY } from './roles.decorator'
+import { authLogger } from '@/logger/winston-mongodb.logger'
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -15,7 +16,10 @@ export class RolesGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest()
     const user = request.user
-    if (!user) return false
+    if (!user) {
+      authLogger.error(`No user found in request context for roles guard`)
+      return false
+    }
 
     const raw = user.roles ?? user.role
     const userRoles = Array.isArray(raw) ? raw : [raw]
