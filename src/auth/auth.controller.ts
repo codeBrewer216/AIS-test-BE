@@ -20,6 +20,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Post('login')
+  @ApiOperation({ summary: 'User Login', description: 'Authenticate a user and return a JWT token' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -34,6 +35,7 @@ export class AuthController {
   }
 
   @Get('me')
+  @ApiOperation({ summary: 'Get Authenticated User Info', description: 'Retrieve the information of the authenticated user' })
   @UseGuards(JwtRedisGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get User Profile', description: 'Retrieve the profile information of the authenticated user' })
@@ -46,6 +48,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @ApiOperation({ summary: 'User Logout', description: 'Invalidate the JWT token and log out the user' })
   @UseGuards(JwtRedisGuard)
   @ApiBearerAuth('access-token')
   async logout(@Req() req: Request) {
@@ -57,6 +60,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @ApiOperation({ summary: 'Refresh JWT Token', description: 'Refresh the JWT token for the authenticated user' })
   @UseGuards(JwtRedisGuard)
   @ApiBearerAuth('access-token')
   async refreshToken(@Req() req: JwtRequest) {

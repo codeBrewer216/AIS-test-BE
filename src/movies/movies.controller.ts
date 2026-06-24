@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param, Put, Delete, UseGuards } from '@nestjs/common';
 import { MoviesService } from './movies.service';
-import { ApiBearerAuth, ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Movies } from './moives.schema';
 import { JwtRedisGuard } from '../guard/jwt-redis.guard';
 import { Roles } from '../guard/roles.decorator';
@@ -12,6 +12,7 @@ export class MoviesController {
   constructor(private readonly moviesService: MoviesService) { }
 
   @Post()
+  @ApiOperation({ summary: 'Create a new movie' })
   @UseGuards(JwtRedisGuard, RolesGuard)
   @Roles('admin')
   @ApiBearerAuth('access-token')
@@ -24,11 +25,14 @@ export class MoviesController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all movies' })
+  @UseGuards(JwtRedisGuard)
   async findAll() {
     return await this.moviesService.findAll()
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a movie by ID' })
   @UseGuards(JwtRedisGuard)
   @ApiBearerAuth('access-token')
   @ApiParam({ name: 'id', description: 'Movie ID' })
@@ -37,7 +41,8 @@ export class MoviesController {
   }
 
   @Put(':id')
-  @UseGuards(JwtRedisGuard)
+  @ApiOperation({ summary: 'Update a movie by ID' })
+  @UseGuards(JwtRedisGuard, RolesGuard)
   @Roles('admin')
   @ApiBearerAuth('access-token')
   @ApiParam({ name: 'id', description: 'Movie ID' })
@@ -46,7 +51,8 @@ export class MoviesController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtRedisGuard)
+  @ApiOperation({ summary: 'Delete a movie by ID' })
+  @UseGuards(JwtRedisGuard, RolesGuard)
   @Roles('admin')
   @ApiBearerAuth('access-token')
   @ApiParam({ name: 'id', description: 'Movie ID' })
@@ -55,6 +61,7 @@ export class MoviesController {
   }
 
   @Get(':id/showtimes')
+  @ApiOperation({ summary: 'Get showtimes for a movie by ID' })
   @UseGuards(JwtRedisGuard)
   @ApiBearerAuth('access-token')
   @ApiParam({ name: 'id', description: 'Movie ID' })

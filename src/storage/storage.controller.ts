@@ -56,12 +56,14 @@ export class StorageController {
 
 
   @Get('file/:filename')
+  @ApiOperation({ summary: 'Get a file by filename' })
   async getFile(@Param('filename') filename: string) {
     const stream = await this.service.getFileStream(filename)
     return new StreamableFile(stream)
   }
 
   @Delete(':filename')
+  @ApiOperation({ summary: 'Delete a file by filename' })
   async delete(@Param('filename') filename: string) {
     return this.service.delete(filename)
   }

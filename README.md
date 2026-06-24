@@ -395,6 +395,16 @@ git clone https://github.com/codeBrewer216/AIS-test-BE.git
 
 ```
 
+### Environment Setup
+
+Create a `.env` file from the example configuration:
+
+```bash
+cp .env.example .env
+```
+
+Update the environment variables inside `.env` before running the application.
+
 ### Start Services
 
 ```bash

@@ -1,17 +1,19 @@
 import { Controller, Post, Body, Get, UseGuards, Req, BadRequestException, Param, Res } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { JwtRedisGuard } from '../guard/jwt-redis.guard';
-import { ApiBearerAuth, ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import type { JwtRequest } from '../auth/auth.controller';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { Booking } from './booking.schema';
 import type { Response } from 'express';
 
+@ApiTags('BOOKINGS')
 @Controller('bookings')
 export class BookingController {
   constructor(private readonly bookingService: BookingService) { }
 
   @Post()
+  @ApiOperation({ summary: 'Create a new booking' })
   @UseGuards(JwtRedisGuard)
   @ApiBearerAuth('access-token')
   @ApiBody({ type: CreateBookingDto })
@@ -26,6 +28,7 @@ export class BookingController {
   }
 
   @Get('user')
+  @ApiOperation({ summary: 'Get bookings for the authenticated user' })
   @UseGuards(JwtRedisGuard)
   @ApiBearerAuth('access-token')
   async getUserBookings(@Req() req: JwtRequest) {
@@ -36,6 +39,7 @@ export class BookingController {
   }
 
   @Get(':id/export-pdf')
+  @ApiOperation({ summary: 'Export booking details as PDF' })
   @UseGuards(JwtRedisGuard)
   @ApiBearerAuth('access-token')
   @ApiParam({ name: 'id', description: 'Booking ID' })
@@ -53,6 +57,7 @@ export class BookingController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get booking details by ID' })
   @UseGuards(JwtRedisGuard)
   @ApiBearerAuth('access-token')
   @ApiParam({ name: 'id', description: 'Booking ID' })
