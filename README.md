@@ -674,7 +674,7 @@ Users can review and confirm their reservation before submitting the booking.
 
 ## Demo
 
-[📄 Demo Video](hhttps://youtu.be/uVwU33R7AiI)
+[📄 Demo Video](https://youtu.be/uVwU33R7AiI)
 
 ## Related Frontend
 
