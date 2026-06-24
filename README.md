@@ -624,7 +624,7 @@ Winston provides centralized logging and structured log management for troublesh
 
 ## Demo
 
-[📄 Demo Vedio](hhttps://youtu.be/uVwU33R7AiI)
+[📄 Demo Video](hhttps://youtu.be/uVwU33R7AiI)
 
 ## License
 
