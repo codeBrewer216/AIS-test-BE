@@ -55,4 +55,16 @@ export class AuthController {
       await this.authService.logout(token)
     }
   }
+
+  @Post('refresh')
+  @UseGuards(JwtRedisGuard)
+  @ApiBearerAuth('access-token')
+  async refreshToken(@Req() req: JwtRequest) {
+    const authHeader = req.headers['authorization']
+    const token: string = authHeader?.replace(/^Bearer /, '')
+    if (token) {
+      const payload: { email: string } = await this.authService.getPayloadFromToken(token)
+      return this.authService.login(payload.email, null)
+    }
+  }
 }
